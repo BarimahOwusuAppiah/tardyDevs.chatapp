@@ -70,7 +70,7 @@ const CSS = `
   .cl-sidebar-search:focus-within{border-color:rgba(93,214,44,0.4);}
   .cl-sidebar-search input{background:none;border:none;outline:none;color:#F8F8F8;font-size:12px;font-family:inherit;width:100%;}
   .cl-sidebar-search input::placeholder{color:rgba(248,248,248,0.3);}
-  .cl-sidebar-scroll{flex:1;overflow-y:auto;padding:8px 0 4px;}
+  .cl-sidebar-scroll{flex:1;overflow-y:auto;padding:8px 0 4px;min-height:0;}
   .cl-sidebar-scroll::-webkit-scrollbar{width:3px;}
   .cl-sidebar-scroll::-webkit-scrollbar-thumb{background:rgba(248,248,248,0.1);border-radius:2px;}
   .cl-sec-head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px 4px;}
@@ -200,9 +200,18 @@ const CSS = `
       transform:translateX(-100%);
       z-index:50;
       width:min(280px, 85vw);
-      padding-bottom:env(safe-area-inset-bottom, 0px);
+      display:flex;
+      flex-direction:column;
     }
     .cl-sidebar.open{transform:translateX(0);animation:slideIn 0.25s ease;}
+
+    /* Sidebar footer safe area on mobile */
+    .cl-sidebar-foot{
+      padding:12px 14px;
+      padding-bottom:max(14px, env(safe-area-inset-bottom, 14px));
+      background:#111;
+      flex-shrink:0;
+    }
 
     /* Topbar */
     .cl-topbar{
@@ -232,11 +241,6 @@ const CSS = `
     .cl-modal{
       margin:12px;
       margin-bottom:max(12px, env(safe-area-inset-bottom));
-    }
-
-    /* Sidebar footer — safe area */
-    .cl-sidebar-foot{
-      padding-bottom:max(10px, env(safe-area-inset-bottom, 0px));
     }
 
     /* Sidebar scroll — more room */
