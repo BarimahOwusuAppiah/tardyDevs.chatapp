@@ -50,12 +50,14 @@ export const dmService = {
     const [a, b] = [userAId, userBId].sort()
 
     // Try to find existing
-    const { data: existing } = await supabase
+    const { data: existing, error: findError } = await supabase
       .from('direct_conversations')
       .select('*')
       .eq('participant_a_id', a)
       .eq('participant_b_id', b)
-      .single()
+      .maybeSingle()
+
+    if (findError) throw new Error(`Find conversation failed: ${findError.message}`)
 
     if (existing) {
       const other = await dmService.getProfile(userAId === a ? b : a)
@@ -68,7 +70,7 @@ export const dmService = {
       .insert({ participant_a_id: a, participant_b_id: b })
       .select()
       .single()
-    if (error) throw error
+    if (error) throw new Error(`Create conversation failed: ${error.message} (code: ${error.code})`)
 
     const other = await dmService.getProfile(userAId === a ? b : a)
     return { ...created, other_user: other }
