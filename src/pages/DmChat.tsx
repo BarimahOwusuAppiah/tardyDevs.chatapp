@@ -208,7 +208,6 @@ export const DmChat: React.FC<DmChatProps> = ({ onBack }) => {
   const emojiRef        = useRef<HTMLDivElement>(null)
   const inputEmojiRef   = useRef<HTMLDivElement>(null)
   const fileInputRef    = useRef<HTMLInputElement>(null)
-  const typingTimerRef  = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const { user } = useAuthStore()
   const {
