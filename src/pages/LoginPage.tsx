@@ -359,47 +359,21 @@ const CSS = `
     animation: tdSpin 0.7s linear infinite;
   }
 
-  /* ── Or divider ── */
-  .td-or {
+  /* ── Success toast ── */
+  .td-success {
     display: flex;
     align-items: center;
-    gap: 12px;
-  }
-  .td-or-line {
-    flex: 1;
-    height: 1px;
-    background: rgba(248,248,248,0.09);
-  }
-  .td-or-text {
-    font-size: 12px;
-    color: rgba(248,248,248,0.3);
-    white-space: nowrap;
-  }
-
-  /* ── Google button ── */
-  .td-btn-google {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    padding: 13px 20px;
-    border-radius: 12px;
-    font-size: 14px;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: rgba(93,214,44,0.12);
+    border: 1px solid rgba(93,214,44,0.35);
+    color: #5DD62C;
+    font-size: 13px;
     font-weight: 500;
-    font-family: inherit;
-    color: #F8F8F8;
-    background: rgba(248,248,248,0.04);
-    border: 1.5px solid rgba(248,248,248,0.12);
-    cursor: pointer;
-    transition: background 0.2s, border-color 0.2s, transform 0.15s;
+    margin-bottom: 20px;
+    animation: tdFadeUp 0.35s cubic-bezier(0.22,1,0.36,1) both;
   }
-  .td-btn-google:hover {
-    background: rgba(248,248,248,0.08);
-    border-color: rgba(248,248,248,0.22);
-    transform: translateY(-1px);
-  }
-  .td-btn-google:active { transform: translateY(0); }
 
   /* ── Footer ── */
   .td-footer {
@@ -460,6 +434,7 @@ export const LoginPage: React.FC<{ defaultRegister?: boolean }> = ({ defaultRegi
   const [rememberMe, setRememberMe]     = useState(false)
   const [error, setError]               = useState('')
   const [isLoading, setIsLoading]       = useState(false)
+  const [successMsg, setSuccessMsg]     = useState('')
   const navigate = useNavigate()
   const setUser  = useAuthStore((state) => state.setUser)
 
@@ -476,7 +451,8 @@ export const LoginPage: React.FC<{ defaultRegister?: boolean }> = ({ defaultRegi
             email: user.email || '',
             username: username,
           })
-          navigate('/chat')
+          setSuccessMsg('Account created successfully! Redirecting…')
+          setTimeout(() => navigate('/chat'), 1800)
         }
       } else {
         const { user } = await authService.signIn(email, password)
@@ -548,6 +524,17 @@ export const LoginPage: React.FC<{ defaultRegister?: boolean }> = ({ defaultRegi
                 <path d="M8 5v3.5M8 11h.01" stroke="#f87171" strokeWidth="1.5" strokeLinecap="round"/>
               </svg>
               {error}
+            </div>
+          )}
+
+          {/* Success */}
+          {successMsg && (
+            <div className="td-success">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <circle cx="8" cy="8" r="7" stroke="#5DD62C" strokeWidth="1.5"/>
+                <path d="M5 8l2.5 2.5L11 5.5" stroke="#5DD62C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              {successMsg}
             </div>
           )}
 
@@ -737,27 +724,6 @@ export const LoginPage: React.FC<{ defaultRegister?: boolean }> = ({ defaultRegi
               }
             </button>
 
-            {/* Or divider (Login only) */}
-            {!isRegister && (
-              <>
-                <div className="td-or">
-                  <div className="td-or-line" />
-                  <span className="td-or-text">or continue with</span>
-                  <div className="td-or-line" />
-                </div>
-
-                {/* Google */}
-                <button type="button" className="td-btn-google">
-                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                    <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
-                    <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
-                    <path d="M3.964 10.707A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.039l3.007-2.332z" fill="#FBBC05"/>
-                    <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.961L3.964 7.293C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
-                  </svg>
-                  Sign in with Google
-                </button>
-              </>
-            )}
           </form>
 
           {/* Footer */}
