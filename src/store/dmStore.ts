@@ -80,7 +80,6 @@ export const useDmStore = create<DmState>((set, get) => ({
       get().subscribeToConversation(conv.id)
     } catch (e: any) {
       console.error('openDmWithUser error:', e?.message ?? e)
-      alert(`DM Error: ${e?.message ?? JSON.stringify(e)}`)
     }
   },
 
@@ -111,7 +110,6 @@ export const useDmStore = create<DmState>((set, get) => ({
       }))
     } catch (e: any) {
       console.error('sendMessage error:', e?.message ?? e)
-      alert(`Send failed: ${e?.message ?? JSON.stringify(e)}`)
       throw e
     } finally {
       set({ isSending: false })

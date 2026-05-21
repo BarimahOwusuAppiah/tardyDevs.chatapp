@@ -12,18 +12,30 @@ export const authService = {
     })
     if (error) throw error
 
-    // Step 2: Manually upsert the profile as a fallback in case the
-    // trigger hasn't fired yet or ran into a conflict
+    // Step 2: Ensure profile exists — insert it directly, don't rely solely on trigger
     if (data.user) {
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert(
-          { id: data.user.id, username },
-          { onConflict: 'id', ignoreDuplicates: true }
-        )
-      // Don't throw on profile error — the trigger may have already created it
-      if (profileError) {
-        console.warn('Profile upsert warning (may already exist):', profileError.message)
+      // Retry up to 3 times in case the trigger is slightly delayed
+      let profileCreated = false
+      for (let i = 0; i < 3; i++) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .upsert(
+            { id: data.user.id, username },
+            { onConflict: 'id' }
+          )
+        if (!profileError) {
+          profileCreated = true
+          break
+        }
+        // If username is taken, throw a clear error
+        if (profileError.code === '23505') {
+          throw new Error('Username is already taken. Please choose a different one.')
+        }
+        // Wait 500ms before retrying
+        await new Promise(r => setTimeout(r, 500))
+      }
+      if (!profileCreated) {
+        console.warn('Profile could not be created after 3 attempts')
       }
     }
 
