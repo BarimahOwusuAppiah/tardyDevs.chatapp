@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Green blob shapes -->
+  <path d="M8 12c4-4 8-2 8 2s-4 6-8 6-8-2-8-2 4-6 8-6z" fill="#5DD62C" opacity="0.8"/>
+  <path d="M24 20c-4 4-8 2-8-2s4-6 8-6 8 2 8 2-4 6-8 6z" fill="#5DD62C" opacity="0.8"/>
+  <!-- White overlapping circle -->
+  <circle cx="16" cy="16" r="4" fill="white" opacity="0.9"/>
+</svg>
