@@ -8,30 +8,41 @@ export const authService = {
       password,
       options: {
         data: { username },
+        // Skip email confirmation redirect
+        emailRedirectTo: undefined,
       },
     })
     if (error) throw error
 
-    // Step 2: Ensure profile exists — insert it directly, don't rely solely on trigger
-    if (data.user) {
-      // Retry up to 3 times in case the trigger is slightly delayed
+    // Step 2: If Supabase email confirmation is ON, the session will be null.
+    // Auto sign-in so the user gets a live session immediately.
+    let activeUser = data.user
+    if (data.user && !data.session) {
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+      if (signInError) throw signInError
+      activeUser = signInData.user
+    }
+
+    // Step 3: Ensure profile exists
+    if (activeUser) {
       let profileCreated = false
       for (let i = 0; i < 3; i++) {
         const { error: profileError } = await supabase
           .from('profiles')
           .upsert(
-            { id: data.user.id, username },
+            { id: activeUser.id, username },
             { onConflict: 'id' }
           )
         if (!profileError) {
           profileCreated = true
           break
         }
-        // If username is taken, throw a clear error
         if (profileError.code === '23505') {
           throw new Error('Username is already taken. Please choose a different one.')
         }
-        // Wait 500ms before retrying
         await new Promise(r => setTimeout(r, 500))
       }
       if (!profileCreated) {
@@ -39,7 +50,8 @@ export const authService = {
       }
     }
 
-    return data
+    // Return with a guaranteed user reference
+    return { ...data, user: activeUser }
   },
 
   async signIn(email: string, password: string) {
