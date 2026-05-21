@@ -250,6 +250,12 @@ const CSS = `
   @media (max-width: 380px) {
     .sp-brand-white, .sp-brand-green { font-size: 30px; }
     .sp-icon-wrap { width: 72px; height: 72px; }
+    .sp-tagline { font-size: 11px; letter-spacing: 0.15em; margin-bottom: 40px; }
+    .sp-content { padding: 0 20px; }
+  }
+  @media (max-width: 320px) {
+    .sp-brand-white, .sp-brand-green { font-size: 26px; }
+    .sp-icon-wrap { width: 60px; height: 60px; }
   }
 `
 

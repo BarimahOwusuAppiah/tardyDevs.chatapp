@@ -166,6 +166,30 @@ const CSS = `
 
   @media(max-width:768px){
     .dm-header-back{display:flex;}
+    /* Wider bubbles */
+    .dm-body{max-width:82%;}
+    /* Input safe area */
+    .dm-input-bar{
+      padding:8px 12px;
+      padding-bottom:max(14px, env(safe-area-inset-bottom, 14px));
+    }
+    /* Prevent iOS zoom on input */
+    .dm-textarea{font-size:16px;}
+    /* Messages padding */
+    .dm-messages{padding:8px 10px 4px;}
+    /* Emoji panel centered */
+    .dm-input-emoji-panel{right:auto;left:50%;transform:translateX(-50%);width:min(220px,90vw);}
+    /* Image messages full width */
+    .dm-img-msg{max-width:100%;}
+    /* Bigger tap targets */
+    .dm-act-btn{width:32px;height:32px;}
+    /* Attach preview */
+    .dm-attach-preview{padding:6px 10px;}
+  }
+  @media(max-width:380px){
+    .dm-body{max-width:88%;}
+    .dm-bubble{font-size:13px;padding:7px 10px;}
+    .dm-header-name{font-size:13px;}
   }
 `
 

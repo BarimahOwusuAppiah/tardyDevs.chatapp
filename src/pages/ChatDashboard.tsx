@@ -219,6 +219,32 @@ const CSS = `
   .cd-welcome-icon { width:52px; height:52px; border-radius:14px; background:rgba(93,214,44,0.1); border:1px solid rgba(93,214,44,0.2); display:flex; align-items:center; justify-content:center; margin-bottom:10px; }
   .cd-welcome h2 { font-size:20px; font-weight:800; color:#F8F8F8; margin:0 0 4px; }
   .cd-welcome p  { font-size:13px; color:rgba(248,248,248,0.45); margin:0; }
+
+  /* ── MOBILE ── */
+  @media(max-width:768px){
+    .cd-body{max-width:82%;}
+    .cd-action-btn{width:34px;height:34px;}
+    .cd-input-bar{
+      padding:8px 12px;
+      padding-bottom:max(14px, env(safe-area-inset-bottom, 14px));
+    }
+    .cd-messages{padding:8px 10px 4px;}
+    .cd-pinned{margin:8px 10px 0;}
+    .cd-welcome{padding:16px 10px 8px;}
+    .cd-welcome h2{font-size:18px;}
+    .cd-input-emoji-panel{right:auto;left:50%;transform:translateX(-50%);width:min(220px,90vw);}
+    .cd-emoji-picker{right:auto;left:0;}
+    .cd-row.own .cd-emoji-picker{left:auto;right:0;}
+    .cd-attach-preview{padding:6px 10px;}
+    .cd-textarea{font-size:16px;}
+    .cd-img-msg{max-width:100%;}
+  }
+  @media(max-width:380px){
+    .cd-body{max-width:88%;}
+    .cd-bubble{font-size:13px;padding:8px 11px;}
+    .cd-author{font-size:12px;}
+    .cd-time{font-size:10px;}
+  }
 `
 
 function initials(name?: string) {

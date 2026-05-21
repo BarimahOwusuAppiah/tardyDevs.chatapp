@@ -417,8 +417,31 @@ const CSS = `
 
   /* ── Responsive ── */
   @media (max-width: 480px) {
-    .td-card { padding: 32px 22px 28px; border-radius: 20px; }
+    .td-page {
+      padding: 16px 12px;
+      align-items: flex-start;
+      padding-top: max(24px, env(safe-area-inset-top, 24px));
+      padding-bottom: max(24px, env(safe-area-inset-bottom, 24px));
+    }
+    .td-card {
+      padding: 28px 18px 24px;
+      border-radius: 20px;
+      width: 100%;
+    }
     .td-brand-white, .td-brand-green { font-size: 24px; }
+    .td-logo-wrap { margin-bottom: 18px; gap: 6px; }
+    .td-logo-icon { width: 52px; height: 52px; }
+    .td-heading h1 { font-size: 19px; }
+    .td-heading p  { font-size: 13px; }
+    .td-form { gap: 14px; }
+    .td-input { padding: 12px 14px 12px 40px; font-size: 16px; }
+    .td-btn-primary { padding: 13px 20px; font-size: 14px; }
+    .td-divider { margin-bottom: 20px; }
+    .td-heading { margin-bottom: 18px; }
+  }
+  @media (max-width: 360px) {
+    .td-card { padding: 22px 14px 20px; }
+    .td-brand-white, .td-brand-green { font-size: 22px; }
   }
 `
 

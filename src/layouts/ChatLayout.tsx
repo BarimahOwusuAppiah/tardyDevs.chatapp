@@ -184,19 +184,81 @@ const CSS = `
   .cl-empty h3{font-size:16px;font-weight:600;margin:0;}
   .cl-empty p{font-size:13px;margin:0;opacity:0.7;}
 
-  /* RESPONSIVE */
+  /* ── MOBILE RESPONSIVE ── */
   @media(max-width:768px){
+    /* Hide desktop rail, show hamburger */
     .cl-rail{display:none;}
     .cl-mobile-menu{display:flex;}
-    .cl-sidebar{position:fixed;top:0;left:0;bottom:0;transform:translateX(-100%);z-index:50;width:270px;}
+
+    /* Sidebar: full-height drawer from left */
+    .cl-sidebar{
+      position:fixed;top:0;left:0;bottom:0;
+      transform:translateX(-100%);
+      z-index:50;
+      width:min(280px, 85vw);
+      padding-bottom:env(safe-area-inset-bottom, 0px);
+    }
     .cl-sidebar.open{transform:translateX(0);animation:slideIn 0.25s ease;}
+
+    /* Topbar */
+    .cl-topbar{
+      padding:0 12px;
+      padding-left:max(12px, env(safe-area-inset-left));
+      padding-right:max(12px, env(safe-area-inset-right));
+    }
     .cl-topbar-desc{display:none;}
-    .cl-notif-panel{right:8px;left:8px;width:auto;}
-    .cl-profile-menu{left:8px;bottom:60px;}
+    .cl-topbar-channel{font-size:14px;}
+
+    /* Notification panel — full width on mobile */
+    .cl-notif-panel{
+      right:8px;left:8px;width:auto;
+      top:58px;
+      max-height:70vh;
+      overflow-y:auto;
+    }
+
+    /* Profile menu — bottom of screen */
+    .cl-profile-menu{
+      left:8px;right:8px;width:auto;
+      bottom:calc(8px + env(safe-area-inset-bottom, 0px));
+      border-radius:16px;
+    }
+
+    /* Modal — full width with safe area */
+    .cl-modal{
+      margin:12px;
+      margin-bottom:max(12px, env(safe-area-inset-bottom));
+    }
+
+    /* Sidebar footer — safe area */
+    .cl-sidebar-foot{
+      padding-bottom:max(10px, env(safe-area-inset-bottom, 0px));
+    }
+
+    /* Sidebar scroll — more room */
+    .cl-sidebar-scroll{padding-bottom:8px;}
+
+    /* Channel/DM buttons — bigger tap targets */
+    .cl-ch-btn{padding:9px 14px;font-size:14px;}
+    .cl-dm-btn{padding:9px 14px;font-size:14px;}
+
+    /* Outlet — full height */
+    .cl-outlet{height:100%;}
   }
+
   @media(max-width:480px){
     .cl-topbar{padding:0 10px;}
-    .cl-modal{margin:12px;}
+    .cl-modal{margin:8px;}
+    .cl-sidebar{width:min(300px, 92vw);}
+    .cl-ws-name{font-size:14px;}
+  }
+
+  /* Safe area for notched phones (iPhone X+) */
+  @supports(padding:max(0px)){
+    .cl-shell{
+      padding-left:env(safe-area-inset-left);
+      padding-right:env(safe-area-inset-right);
+    }
   }
 `
 

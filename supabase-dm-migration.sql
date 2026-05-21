@@ -199,11 +199,37 @@ CREATE POLICY "dm_delete" ON direct_messages
   FOR DELETE USING (auth.uid() = sender_id);
 
 -- ── 9. REALTIME SUBSCRIPTIONS ────────────────────────────────
--- Enable realtime for these tables in Supabase dashboard too
-ALTER PUBLICATION supabase_realtime ADD TABLE messages;
-ALTER PUBLICATION supabase_realtime ADD TABLE direct_messages;
-ALTER PUBLICATION supabase_realtime ADD TABLE direct_conversations;
-ALTER PUBLICATION supabase_realtime ADD TABLE profiles;
+-- Safely add tables to realtime (skips if already added)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime' AND tablename = 'messages'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE messages;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime' AND tablename = 'direct_messages'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE direct_messages;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime' AND tablename = 'direct_conversations'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE direct_conversations;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime' AND tablename = 'profiles'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE profiles;
+  END IF;
+END $$;
 
 -- ── 10. SEED DEFAULT CHANNELS ────────────────────────────────
 INSERT INTO channels (name, description) VALUES
