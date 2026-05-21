@@ -35,9 +35,11 @@ interface MessageState {
   setReplyingTo: (msg: Message | null) => void
   toggleReaction: (messageId: string, emoji: string, userId: string) => void
   deleteMessage: (messageId: string, userId: string) => Promise<void>
+  broadcastTyping: (channelId: string, userId: string, username: string) => void
 }
 
 let messageSubscription: ReturnType<typeof supabase.channel> | null = null
+const typingTimers: Record<string, ReturnType<typeof setTimeout>> = {}
 
 export const useMessageStore = create<MessageState>((set, get) => ({
   messages: [],
@@ -109,8 +111,21 @@ export const useMessageStore = create<MessageState>((set, get) => ({
     }
   },
 
+  // Broadcast typing — auto-stops after 3s of no keystrokes
+  broadcastTyping: (channelId, userId, username) => {
+    if (!messageSubscription) return
+    messageSubscription.track({ typing: true, userId, username, channelId })
+    if (typingTimers[userId]) clearTimeout(typingTimers[userId])
+    typingTimers[userId] = setTimeout(() => {
+      messageSubscription?.untrack()
+      delete typingTimers[userId]
+    }, 3000)
+  },
+
   subscribeToMessages: (channelId) => {
     get().unsubscribeFromMessages()
+    set({ typingUsers: [] })
+
     messageSubscription = supabase
       .channel(`messages:${channelId}`)
       .on('postgres_changes', {
@@ -120,7 +135,6 @@ export const useMessageStore = create<MessageState>((set, get) => ({
         filter: `channel_id=eq.${channelId}`,
       }, async (payload) => {
         const newMsg = payload.new as Message
-        // Fetch profile for the new message
         const { data: profile } = await supabase
           .from('profiles')
           .select('username, avatar_url')
@@ -142,13 +156,37 @@ export const useMessageStore = create<MessageState>((set, get) => ({
           messages: state.messages.filter((m) => m.id !== (payload.old as Message).id),
         }))
       })
+      // Presence: typing indicators
+      .on('presence', { event: 'sync' }, () => {
+        const presenceState = messageSubscription?.presenceState() ?? {}
+        const typers: string[] = []
+        for (const presences of Object.values(presenceState)) {
+          for (const p of presences as any[]) {
+            if (p.typing && p.username) typers.push(p.username)
+          }
+        }
+        set({ typingUsers: typers })
+      })
+      .on('presence', { event: 'leave' }, ({ leftPresences }) => {
+        const leaving = (leftPresences as any[])
+          .filter(p => p.typing)
+          .map(p => p.username)
+        if (leaving.length > 0) {
+          set((state) => ({
+            typingUsers: state.typingUsers.filter(u => !leaving.includes(u)),
+          }))
+        }
+      })
       .subscribe()
   },
 
   unsubscribeFromMessages: () => {
     if (messageSubscription) {
+      messageSubscription.untrack()
       messageSubscription.unsubscribe()
       messageSubscription = null
     }
+    Object.values(typingTimers).forEach(clearTimeout)
+    set({ typingUsers: [] })
   },
 }))

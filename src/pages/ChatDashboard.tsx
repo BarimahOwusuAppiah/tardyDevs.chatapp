@@ -292,10 +292,11 @@ export const ChatDashboard: React.FC = () => {
   const emojiRef       = useRef<HTMLDivElement>(null)
   const inputEmojiRef  = useRef<HTMLDivElement>(null)
   const fileInputRef   = useRef<HTMLInputElement>(null)
+  const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const { activeChannel }  = useChannelStore()
   const { messages, isLoading, sendMessage, fetchMessages, subscribeToMessages, unsubscribeFromMessages,
-          replyingTo, setReplyingTo, toggleReaction, deleteMessage } = useMessageStore()
+          replyingTo, setReplyingTo, toggleReaction, deleteMessage, typingUsers, broadcastTyping } = useMessageStore()
   const { user } = useAuthStore()
 
   useEffect(() => {
@@ -328,6 +329,17 @@ export const ChatDashboard: React.FC = () => {
     el.style.height = 'auto'
     el.style.height = `${Math.min(el.scrollHeight, 140)}px`
   }, [])
+
+  // Broadcast typing presence — stops after 3s of no keystrokes
+  const handleTyping = useCallback(() => {
+    if (!activeChannel || !user) return
+    broadcastTyping(activeChannel.id, user.id, user.username)
+    if (typingTimerRef.current) clearTimeout(typingTimerRef.current)
+    typingTimerRef.current = setTimeout(() => {
+      // Untrack presence to signal stopped typing
+      // The store's untrack is called via broadcastTyping with typing:false
+    }, 3000)
+  }, [activeChannel, user, broadcastTyping])
 
   const handleSend = async (e?: React.FormEvent) => {
     e?.preventDefault()
@@ -604,15 +616,20 @@ export const ChatDashboard: React.FC = () => {
                 ))
               )}
 
-              {/* Typing indicator */}
-              <div className="cd-typing">
-                <div className="cd-typing-dots">
-                  <div className="cd-typing-dot" />
-                  <div className="cd-typing-dot" />
-                  <div className="cd-typing-dot" />
+              {/* Typing indicator — only shown when someone else is typing */}
+              {typingUsers.filter(u => u !== user?.username).length > 0 && (
+                <div className="cd-typing">
+                  <div className="cd-typing-dots">
+                    <div className="cd-typing-dot" />
+                    <div className="cd-typing-dot" />
+                    <div className="cd-typing-dot" />
+                  </div>
+                  <span style={{ marginLeft: 2 }}>
+                    {typingUsers.filter(u => u !== user?.username).join(', ')}
+                    {typingUsers.filter(u => u !== user?.username).length === 1 ? ' is' : ' are'} typing…
+                  </span>
                 </div>
-                <span style={{ marginLeft: 2 }}>Someone is typing…</span>
-              </div>
+              )}
 
               <div ref={messagesEndRef} />
             </>
@@ -677,7 +694,7 @@ export const ChatDashboard: React.FC = () => {
                 placeholder={attachFile ? `Add a caption… (optional)` : `Message #${activeChannel.name}`}
                 value={text}
                 rows={1}
-                onChange={e => { setText(e.target.value); autoResize(e.target) }}
+                onChange={e => { setText(e.target.value); autoResize(e.target); handleTyping() }}
                 onKeyDown={handleKeyDown}
                 aria-label={`Message #${activeChannel.name}`}
               />

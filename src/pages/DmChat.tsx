@@ -208,13 +208,14 @@ export const DmChat: React.FC<DmChatProps> = ({ onBack }) => {
   const emojiRef        = useRef<HTMLDivElement>(null)
   const inputEmojiRef   = useRef<HTMLDivElement>(null)
   const fileInputRef    = useRef<HTMLInputElement>(null)
+  const typingTimerRef  = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const { user } = useAuthStore()
   const {
     activeConversation, messages, isLoadingMessages, isSending,
     replyingTo, setReplyingTo, sendMessage, markAsRead,
     deleteMessage, subscribeToConversation, unsubscribeFromConversation,
-    fetchMessages,
+    fetchMessages, typingUsers, broadcastDmTyping,
   } = useDmStore()
 
   const conv = activeConversation
@@ -245,6 +246,12 @@ export const DmChat: React.FC<DmChatProps> = ({ onBack }) => {
     el.style.height = 'auto'
     el.style.height = `${Math.min(el.scrollHeight, 140)}px`
   }, [])
+
+  // Broadcast typing presence — stops after 3s of no keystrokes
+  const handleTyping = useCallback(() => {
+    if (!conv || !user) return
+    broadcastDmTyping(conv.id, user.id, user.username)
+  }, [conv, user, broadcastDmTyping])
 
   const handleSend = async (e?: React.FormEvent) => {
     e?.preventDefault()
@@ -518,6 +525,20 @@ export const DmChat: React.FC<DmChatProps> = ({ onBack }) => {
           </div>
         )}
 
+        {/* Typing indicator — only shown when the other person is typing */}
+        {typingUsers.filter(u => u !== user?.username).length > 0 && (
+          <div className="dm-typing">
+            <div className="dm-typing-dots">
+              <div className="dm-typing-dot" />
+              <div className="dm-typing-dot" />
+              <div className="dm-typing-dot" />
+            </div>
+            <span style={{ marginLeft: 4 }}>
+              {other.username} is typing…
+            </span>
+          </div>
+        )}
+
         {/* File attachment preview */}
         {attachFile && (
           <div className="dm-attach-preview">
@@ -554,7 +575,7 @@ export const DmChat: React.FC<DmChatProps> = ({ onBack }) => {
                 placeholder={attachFile ? `Add a caption… (optional)` : `Message ${other.username}`}
                 value={text}
                 rows={1}
-                onChange={e => { setText(e.target.value); autoResize(e.target) }}
+                onChange={e => { setText(e.target.value); autoResize(e.target); handleTyping() }}
                 onKeyDown={handleKeyDown}
                 aria-label={`Message ${other.username}`}
               />

@@ -13,6 +13,7 @@ interface DmState {
   replyingTo: DirectMessage | null
   searchResults: Profile[]
   isSearching: boolean
+  typingUsers: string[]   // usernames of people currently typing in active DM
 
   // Actions
   fetchConversations: (userId: string) => Promise<void>
@@ -27,9 +28,12 @@ interface DmState {
   setReplyingTo: (msg: DirectMessage | null) => void
   searchUsers: (query: string, currentUserId: string) => Promise<void>
   clearSearch: () => void
+  broadcastDmTyping: (conversationId: string, userId: string, username: string) => void
 }
 
 let dmSubscription: ReturnType<typeof supabase.channel> | null = null
+// Per-user stop-typing timers for DMs
+const dmTypingTimers: Record<string, ReturnType<typeof setTimeout>> = {}
 
 export const useDmStore = create<DmState>((set, get) => ({
   conversations: [],
@@ -41,6 +45,7 @@ export const useDmStore = create<DmState>((set, get) => ({
   replyingTo: null,
   searchResults: [],
   isSearching: false,
+  typingUsers: [],
 
   fetchConversations: async (userId) => {
     set({ isLoadingConversations: true })
@@ -55,23 +60,22 @@ export const useDmStore = create<DmState>((set, get) => ({
   },
 
   setActiveConversation: (conv) => {
-    set({ activeConversation: conv, messages: [], replyingTo: null })
+    set({ activeConversation: conv, messages: [], replyingTo: null, typingUsers: [] })
   },
 
   openDmWithUser: async (currentUserId, otherUserId) => {
     try {
       const conv = await dmService.getOrCreateConversation(currentUserId, otherUserId)
-      // Add to conversations list if not already there
       set((state) => {
         const exists = state.conversations.find(c => c.id === conv.id)
         return {
           activeConversation: conv,
           messages: [],
           replyingTo: null,
+          typingUsers: [],
           conversations: exists ? state.conversations : [conv, ...state.conversations],
         }
       })
-      // Load messages
       await get().fetchMessages(conv.id)
       get().subscribeToConversation(conv.id)
     } catch (e) {
@@ -98,7 +102,6 @@ export const useDmStore = create<DmState>((set, get) => ({
       set((state) => ({
         messages: [...state.messages, msg],
         replyingTo: null,
-        // Update last message preview in conversation list
         conversations: state.conversations.map(c =>
           c.id === conversationId
             ? { ...c, last_message: content, last_message_at: msg.created_at }
@@ -113,10 +116,27 @@ export const useDmStore = create<DmState>((set, get) => ({
     }
   },
 
+  /**
+   * Broadcast typing presence in a DM conversation.
+   * Auto-stops after 3s of no new keystrokes.
+   */
+  broadcastDmTyping: (conversationId, userId, username) => {
+    if (!dmSubscription) return
+    dmSubscription.track({ typing: true, userId, username, conversationId })
+    if (dmTypingTimers[userId]) clearTimeout(dmTypingTimers[userId])
+    dmTypingTimers[userId] = setTimeout(() => {
+      dmSubscription?.untrack()
+      delete dmTypingTimers[userId]
+    }, 3000)
+  },
+
   subscribeToConversation: (conversationId) => {
     get().unsubscribeFromConversation()
+    set({ typingUsers: [] })
+
     dmSubscription = supabase
       .channel(`dm:${conversationId}`)
+      // ── Postgres changes ──────────────────────────────────────
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
@@ -124,10 +144,8 @@ export const useDmStore = create<DmState>((set, get) => ({
         filter: `conversation_id=eq.${conversationId}`,
       }, async (payload) => {
         const newMsg = payload.new as DirectMessage
-        // Don't add if we already have it (optimistic update)
         const exists = get().messages.find(m => m.id === newMsg.id)
         if (exists) return
-        // Fetch sender profile
         const sender = await dmService.getProfile(newMsg.sender_id)
         const msgWithSender = { ...newMsg, sender }
         set((state) => ({
@@ -149,14 +167,38 @@ export const useDmStore = create<DmState>((set, get) => ({
           messages: state.messages.filter(m => m.id !== (payload.old as DirectMessage).id),
         }))
       })
+      // ── Presence: typing indicators ───────────────────────────
+      .on('presence', { event: 'sync' }, () => {
+        const state = dmSubscription?.presenceState() ?? {}
+        const typers: string[] = []
+        for (const presences of Object.values(state)) {
+          for (const p of presences as any[]) {
+            if (p.typing && p.username) typers.push(p.username)
+          }
+        }
+        set({ typingUsers: typers })
+      })
+      .on('presence', { event: 'leave' }, ({ leftPresences }) => {
+        const leaving = (leftPresences as any[])
+          .filter(p => p.typing)
+          .map(p => p.username)
+        if (leaving.length > 0) {
+          set((state) => ({
+            typingUsers: state.typingUsers.filter(u => !leaving.includes(u)),
+          }))
+        }
+      })
       .subscribe()
   },
 
   unsubscribeFromConversation: () => {
     if (dmSubscription) {
+      dmSubscription.untrack()
       dmSubscription.unsubscribe()
       dmSubscription = null
     }
+    Object.values(dmTypingTimers).forEach(clearTimeout)
+    set({ typingUsers: [] })
   },
 
   markAsRead: async (conversationId, userId) => {
