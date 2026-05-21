@@ -118,6 +118,8 @@ const CSS = `
   .cl-foot-btn{width:28px;height:28px;border-radius:6px;border:none;background:none;cursor:pointer;color:rgba(248,248,248,0.35);display:flex;align-items:center;justify-content:center;transition:color 0.15s,background 0.15s;}
   .cl-foot-btn:hover{color:#F8F8F8;background:rgba(248,248,248,0.08);}
   .cl-foot-btn.danger:hover{color:#f87171;background:rgba(239,68,68,0.1);}
+  /* Topbar avatar button — hidden on desktop, shown on mobile */
+  .cl-topbar-av-btn{display:none;}
 
   /* MAIN */
   .cl-main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:#0F0F0F;min-width:0;}
@@ -189,6 +191,8 @@ const CSS = `
     /* Hide desktop rail, show hamburger */
     .cl-rail{display:none;}
     .cl-mobile-menu{display:flex;}
+    /* Show topbar avatar on mobile */
+    .cl-topbar-av-btn{display:flex;}
 
     /* Sidebar: full-height drawer from left */
     .cl-sidebar{
@@ -662,6 +666,27 @@ export const ChatLayout: React.FC = () => {
             ))}
           </div>
 
+          {/* ── Sidebar footer — user info + sign out (visible on mobile) ── */}
+          <div className="cl-sidebar-foot">
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              <div className="cl-foot-av">
+                {user?.avatar_url ? <img src={user.avatar_url} alt={user?.username} /> : initials(user?.username)}
+                <div className="cl-foot-online" />
+              </div>
+            </div>
+            <div className="cl-foot-info">
+              <div className="cl-foot-name">{user?.username || 'You'}</div>
+              <div className="cl-foot-status">● Online</div>
+            </div>
+            <button
+              className="cl-foot-btn danger"
+              title="Sign Out"
+              onClick={handleLogout}
+              aria-label="Sign out"
+            >
+              <LogOut size={16} />
+            </button>
+          </div>
 
         </aside>
 
@@ -685,6 +710,17 @@ export const ChatLayout: React.FC = () => {
                <button className="cl-topbar-btn" title="Notifications" onClick={() => { setShowNotifs(!showNotifs); setShowProfile(false); if (!showNotifs) setNotifCount(0) }}>
                  <Bell size={17} />
                  {notifCount > 0 && <span className="cl-notif-badge">{notifCount}</span>}
+               </button>
+               {/* User avatar — mobile only, opens profile menu */}
+               <button
+                 className="cl-topbar-btn cl-topbar-av-btn"
+                 title="Profile"
+                 onClick={() => { setShowProfile(!showProfile); setShowNotifs(false) }}
+                 aria-label="Profile menu"
+               >
+                 <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#337418', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700, color: '#0F0F0F', overflow: 'hidden', flexShrink: 0 }}>
+                   {user?.avatar_url ? <img src={user.avatar_url} alt={user?.username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials(user?.username)}
+                 </div>
                </button>
              </div>
           </header>
