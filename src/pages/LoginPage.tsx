@@ -41,7 +41,8 @@ const CSS = `
     padding: 32px 16px;
     background: #0F0F0F;
     position: relative;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
     font-family: 'Inter', system-ui, sans-serif;
   }
 
@@ -418,30 +419,32 @@ const CSS = `
   /* ── Responsive ── */
   @media (max-width: 480px) {
     .td-page {
-      padding: 16px 12px;
       align-items: flex-start;
-      padding-top: max(24px, env(safe-area-inset-top, 24px));
-      padding-bottom: max(24px, env(safe-area-inset-bottom, 24px));
+      padding: max(20px, env(safe-area-inset-top, 20px)) 12px max(20px, env(safe-area-inset-bottom, 20px));
     }
     .td-card {
-      padding: 28px 18px 24px;
-      border-radius: 20px;
+      padding: 24px 16px 20px;
+      border-radius: 18px;
       width: 100%;
+      margin: auto 0;
     }
-    .td-brand-white, .td-brand-green { font-size: 24px; }
-    .td-logo-wrap { margin-bottom: 18px; gap: 6px; }
-    .td-logo-icon { width: 52px; height: 52px; }
-    .td-heading h1 { font-size: 19px; }
-    .td-heading p  { font-size: 13px; }
-    .td-form { gap: 14px; }
-    .td-input { padding: 12px 14px 12px 40px; font-size: 16px; }
-    .td-btn-primary { padding: 13px 20px; font-size: 14px; }
-    .td-divider { margin-bottom: 20px; }
-    .td-heading { margin-bottom: 18px; }
+    .td-brand-white, .td-brand-green { font-size: 22px; }
+    .td-logo-wrap { margin-bottom: 14px; gap: 5px; }
+    .td-logo-icon { width: 46px; height: 46px; }
+    .td-heading { margin-bottom: 14px; }
+    .td-heading h1 { font-size: 18px; }
+    .td-heading p  { font-size: 12px; }
+    .td-divider { margin-bottom: 16px; }
+    .td-form { gap: 12px; }
+    .td-input { padding: 11px 14px 11px 40px; font-size: 16px; }
+    .td-label { font-size: 12px; }
+    .td-btn-primary { padding: 12px 20px; font-size: 14px; }
+    .td-tagline { display: none; }
   }
   @media (max-width: 360px) {
-    .td-card { padding: 22px 14px 20px; }
-    .td-brand-white, .td-brand-green { font-size: 22px; }
+    .td-card { padding: 20px 12px 18px; }
+    .td-brand-white, .td-brand-green { font-size: 20px; }
+    .td-form { gap: 10px; }
   }
 `
 
