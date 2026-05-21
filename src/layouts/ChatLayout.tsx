@@ -107,8 +107,8 @@ const CSS = `
   .cl-search-empty{padding:12px 14px;font-size:12px;color:rgba(248,248,248,0.3);text-align:center;}
   .cl-search-spinner{animation:clSpin 0.8s linear infinite;color:#5DD62C;}
 
-  /* Sidebar footer */
-  .cl-sidebar-foot{padding:10px 12px;border-top:1px solid rgba(248,248,248,0.06);display:flex;align-items:center;gap:8px;flex-shrink:0;}
+  /* Sidebar footer — hidden on desktop, shown on mobile only */
+  .cl-sidebar-foot{display:none;padding:10px 12px;border-top:1px solid rgba(248,248,248,0.06);align-items:center;gap:8px;flex-shrink:0;}
   .cl-foot-av{width:34px;height:34px;border-radius:50%;background:#337418;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#0F0F0F;flex-shrink:0;overflow:hidden;position:relative;}
   .cl-foot-av img{width:100%;height:100%;object-fit:cover;}
   .cl-foot-online{position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;background:#5DD62C;border:2px solid #111;}
@@ -205,8 +205,9 @@ const CSS = `
     }
     .cl-sidebar.open{transform:translateX(0);animation:slideIn 0.25s ease;}
 
-    /* Sidebar footer safe area on mobile */
+    /* Sidebar footer — show on mobile */
     .cl-sidebar-foot{
+      display:flex;
       padding:12px 14px;
       padding-bottom:max(14px, env(safe-area-inset-bottom, 14px));
       background:#111;
