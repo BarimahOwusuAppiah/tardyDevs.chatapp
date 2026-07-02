@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
-import { Loader2, Send, Smile, Paperclip, X, Reply, Trash2, MoreHorizontal, ArrowLeft, ImageIcon, FileText } from 'lucide-react'
+import { Loader2, Send, Smile, Paperclip, X, Reply, Trash2, MoreHorizontal, ArrowLeft, ImageIcon, FileText, Phone, Video } from 'lucide-react'
 import { useDmStore } from '../store/dmStore'
 import { useAuthStore } from '../store/authStore'
 import type { DirectMessage } from '../services/dmService'
 import { supabase } from '../lib/supabase'
 import { format, isToday, isYesterday } from 'date-fns'
+import { CallOverlay } from '../components/CallOverlay'
 
 const EMOJI_LIST = ['👍','❤️','😂','🔥','🎉','😮','😢','👏','✅','🚀']
 
@@ -50,7 +51,35 @@ const CSS = `
   .dm-header-info{flex:1;min-width:0;}
   .dm-header-name{font-size:14px;font-weight:700;color:#F8F8F8;}
   .dm-header-status{font-size:11px;color:#5DD62C;}
-  .dm-header-status.offline{color:rgba(248,248,248,0.3);}
+  .dm-header-status.offline{
+  color:rgba(248,248,248,0.3);
+}
+  .dm-header-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.dm-header-btn{
+  width:36px;
+  height:36px;
+  border:none;
+  border-radius:10px;
+  background:#1a1a1a;
+  color:#F8F8F8;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  transition:all .2s ease;
+}
+
+.dm-header-btn:hover{
+  background:#5DD62C;
+  color:#0F0F0F;
+  transform:translateY(-1px);
+}
+  }
 
   /* messages */
   .dm-messages{flex:1;overflow-y:auto;padding:10px 14px 6px;display:flex;flex-direction:column;gap:1px;}
@@ -203,6 +232,7 @@ export const DmChat: React.FC<DmChatProps> = ({ onBack }) => {
   const [showInputEmoji, setShowInputEmoji]   = useState(false)
   const [attachFile, setAttachFile]           = useState<File | null>(null)
   const [isUploading, setIsUploading]         = useState(false)
+  const [activeCall, setActiveCall]           = useState<'voice' | 'video' | null>(null)
   const messagesEndRef  = useRef<HTMLDivElement>(null)
   const textareaRef     = useRef<HTMLTextAreaElement>(null)
   const emojiRef        = useRef<HTMLDivElement>(null)
@@ -251,6 +281,9 @@ export const DmChat: React.FC<DmChatProps> = ({ onBack }) => {
     if (!conv || !user) return
     broadcastDmTyping(conv.id, user.id, user.username)
   }, [conv, user, broadcastDmTyping])
+
+  const startVoiceCall = () => setActiveCall('voice')
+  const startVideoCall = () => setActiveCall('video')
 
   const handleSend = async (e?: React.FormEvent) => {
     e?.preventDefault()
@@ -386,12 +419,37 @@ export const DmChat: React.FC<DmChatProps> = ({ onBack }) => {
             {other.avatar_url ? <img src={other.avatar_url} alt={other.username} /> : initials(other.username)}
             {other.is_online && <div className="dm-header-online" />}
           </div>
-          <div className="dm-header-info">
-            <div className="dm-header-name">{other.username}</div>
-            <div className={`dm-header-status${other.is_online ? '' : ' offline'}`}>
-              {other.is_online ? '● Online' : '● Offline'}
-            </div>
-          </div>
+         <div className="dm-header-info">
+  <div className="dm-header-name">
+    {other.username}
+  </div>
+
+  <div
+    className={`dm-header-status${
+      other.is_online ? '' : ' offline'
+    }`}
+  >
+    {other.is_online ? '● Online' : '● Offline'}
+  </div>
+</div>
+
+<div className="dm-header-actions">
+  <button
+    className="dm-header-btn"
+    onClick={startVoiceCall}
+    title="Voice Call"
+  >
+    <Phone size={18} />
+  </button>
+
+  <button
+    className="dm-header-btn"
+    onClick={startVideoCall}
+    title="Video Call"
+  >
+    <Video size={18} />
+  </button>
+</div>
         </div>
 
         {/* Messages */}
@@ -635,6 +693,19 @@ export const DmChat: React.FC<DmChatProps> = ({ onBack }) => {
           </form>
         </div>
       </div>
+
+      {/* Call overlay — rendered outside the chat shell so it covers the full screen */}
+      {activeCall && conv && user && (
+        <CallOverlay
+          mode={activeCall}
+          channelName={conv.id}
+          uid={Math.abs(user.id.split('').reduce((a, c) => (a * 31 + c.charCodeAt(0)) | 0, 0)) || 1}
+          myName={user.username || user.email}
+          peerName={other.username}
+          peerAvatar={other.avatar_url}
+          onEnd={() => setActiveCall(null)}
+        />
+      )}
     </>
   )
 }
